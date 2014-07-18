@@ -20,6 +20,12 @@ section() {
 	sleep 1
 }
 
+wait_while_busy() {
+	while [ "`${LSOF} "$1" 2>/dev/null`" != "" ]; do
+		:
+	done
+}
+
 # overrides
 PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 IMAGE="sdcard.img"
@@ -33,6 +39,7 @@ echo "Creating ${SIZE} size image..."
 sleep 3
 
 # dependencies
+LSOF=`which lsof`
 CP=`which cp`
 DD=`which dd`
 MOUNT=`which mount`
@@ -45,7 +52,8 @@ MKFS_EXT4=`which mkfs.ext4`
 MKFS_VFAT=`which mkfs.vfat`
 TAR=`which tar`
 
-if [ -z "${CP}" ] ||
+if [ -z "${LSOF}" ] ||
+   [ -z "${CP}" ] ||
    [ -z "${DD}" ] ||
    [ -z "${MOUNT}" ] ||
    [ -z "${UMOUNT}" ] ||
@@ -57,6 +65,7 @@ if [ -z "${CP}" ] ||
    [ -z "${MKFS_VFAT}" ] ||
    [ -z "${TAR}" ]; then
 	echo "Missing dependencies:\n"
+	echo "LSOF=${LSOF}"
 	echo "CP=${CP}"
 	echo "DD=${DD}"
 	echo "MOUNT=${MOUNT}"
@@ -125,6 +134,7 @@ section "Populating boot partition..."
 
 ${MOUNT} ${LOOP} .mnt || exit 2
 ${CP} ${OUTPUT_PREFIX}images/boot/* .mnt
+wait_while_busy .mnt
 ${UMOUNT} .mnt
 
 ${SYNC}
@@ -147,6 +157,7 @@ section "Populating rootfs partition..."
 
 ${MOUNT} ${LOOP} .mnt || exit 2
 ${TAR} -xvpsf ${OUTPUT_PREFIX}images/rootfs.tar -C .mnt
+wait_while_busy .mnt
 ${UMOUNT} .mnt
 
 ${SYNC}

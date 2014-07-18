@@ -36,6 +36,12 @@ section() {
 	sleep 1
 }
 
+wait_while_busy() {
+	while [ "`${LSOF} "$1" 2>/dev/null`" != "" ]; do
+		:
+	done
+}
+
 # environment overrides
 
 PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
@@ -65,13 +71,19 @@ fi
 
 # dependencies
 
+LSOF=`which lsof`
 FDISK=`which fdisk`
 MKFS_EXT4=`which mkfs.ext4`
 MKFS_VFAT=`which mkfs.vfat`
 TAR=`which tar`
 
-if [ -z "${FDISK}" ] || [ -z "${MKFS_EXT4}" ] || [ -z "${MKFS_VFAT}" ] || [ -z "${TAR}" ]; then
+if [ -z "${LSOF}" ] ||
+   [ -z "${FDISK}" ] ||
+   [ -z "${MKFS_EXT4}" ] ||
+   [ -z "${MKFS_VFAT}" ] ||
+   [ -z "${TAR}" ]; then
 	echo "Missing dependencies:\n"
+	echo "LSOF=${LSOF}"
 	echo "FDISK=${FDISK}"
 	echo "MKFS_EXT4=${MKFS_EXT4}"
 	echo "MKFS_VFAT=${MKFS_VFAT}"
@@ -137,6 +149,7 @@ section "Populating boot partition..."
 
 mount "${SDCARD}1" .mnt || exit 2
 cp ${OUTPUT_PREFIX}images/boot/* .mnt
+wait_while_busy .mnt
 umount .mnt
 
 # fill rootfs
@@ -145,6 +158,7 @@ section "Populating rootfs partition..."
 
 mount "${SDCARD}2" .mnt || exit 2
 ${TAR} -xpsf ${OUTPUT_PREFIX}images/rootfs.tar -C .mnt
+wait_while_busy .mnt
 umount .mnt
 
 # clean up
