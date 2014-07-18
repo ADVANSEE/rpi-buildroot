@@ -28,7 +28,6 @@ wait_while_busy() {
 
 # overrides
 PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
-IMAGE="sdcard.img"
 OUTPUT_PREFIX=""
 
 if [ -z "${SIZE}" ]; then
@@ -89,6 +88,8 @@ if [ ! -f "images/rootfs.tar" ]; then
 		exit 1
 	fi
 fi
+
+IMAGE="${OUTPUT_PREFIX}images/sdcard.img"
 
 # find loop device
 LOOP=`${LOSETUP} -f`
