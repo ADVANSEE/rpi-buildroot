@@ -108,40 +108,53 @@ a
 w
 END
 
-# loop image
-${LOSETUP} -P ${LOOP} ${IMAGE} || exit 1
-
-# format partitions
-
-section "Formatting partitions..."
-
-${MKFS_VFAT} -F 16 -n BOOT -I "${LOOP}p1" || exit 1
-${MKFS_EXT4} -L rootfs "${LOOP}p2" || exit 1
-
 ${MKDIR} .mnt
+
+# loop image
+${LOSETUP} -o 0x100000 --sizelimit 0x2000000 ${LOOP} ${IMAGE} || exit 1
+
+# format boot partition
+
+section "Formatting boot partition..."
+
+${MKFS_VFAT} -F 16 -n BOOT -I ${LOOP} || exit 1
 
 # fill boot
 
 section "Populating boot partition..."
 
-${MOUNT} "${LOOP}p1" .mnt || exit 2
+${MOUNT} ${LOOP} .mnt || exit 2
 ${CP} ${OUTPUT_PREFIX}images/boot/* .mnt
 ${UMOUNT} .mnt
+
+${SYNC}
+
+# unloop
+${LOSETUP} -d ${LOOP}
+
+# loop image
+${LOSETUP} -o 0x2100000 --sizelimit 0x1F00000 ${LOOP} ${IMAGE} || exit 1
+
+# format rootfs partition
+
+section "Formatting rootfs partitions..."
+
+${MKFS_EXT4} -L rootfs ${LOOP} || exit 1
 
 # fill rootfs
 
 section "Populating rootfs partition..."
 
-${MOUNT} "${LOOP}p2" .mnt || exit 2
+${MOUNT} ${LOOP} .mnt || exit 2
 ${TAR} -xvpsf ${OUTPUT_PREFIX}images/rootfs.tar -C .mnt
 ${UMOUNT} .mnt
 
 ${SYNC}
 
-${RMDIR} .mnt
+# unloop
+${LOSETUP} -d ${LOOP}
 
-# unmount
-${LOSETUP} -D
+${RMDIR} .mnt
 
 section "Finished!"
 
