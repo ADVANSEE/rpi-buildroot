@@ -19,6 +19,8 @@ define RPI_USERLAND_POST_TARGET_CLEANUP
     rmdir --ignore-fail-on-non-empty $(TARGET_DIR)/usr/share/install
     rm -Rf $(TARGET_DIR)/usr/src
     rm -f  $(TARGET_DIR)/etc/init.d/vcfiled
+    $(INSTALL) -m 0755 -D package/raspberrypi/rpi-userland/S97vcfiled \
+		$(TARGET_DIR)/etc/init.d/S97vcfiled
 endef
 RPI_USERLAND_POST_INSTALL_TARGET_HOOKS  += RPI_USERLAND_POST_TARGET_CLEANUP
 

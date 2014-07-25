@@ -1,0 +1,100 @@
+#! /bin/sh
+### BEGIN INIT INFO
+# Provides:          vcfiled
+# Required-Start:    udev
+# Required-Stop:     udev
+# Short-Description: VideoCore file server daemon
+### END INIT INFO
+
+DESC="VideoCore file server daemon"
+NAME=vcfiled
+VCROOT=/usr
+DAEMON=$VCROOT/sbin/$NAME
+DAEMON_ARGS=""
+PIDFILE=/var/run/$NAME/$NAME
+SCRIPTNAME="$0"
+
+# Exit if the package is not installed
+[ -x "$DAEMON" ] || exit 0
+
+# Read configuration variable file if it is present
+[ -r /etc/default/$NAME ] && . /etc/default/$NAME
+
+#
+# Function that starts the daemon/service
+#
+do_start()
+{
+	# Return
+	#   0 if daemon has been started
+	#   1 if daemon was already running
+	#   2 if daemon could not be started
+	start-stop-daemon --start --quiet --pidfile $PIDFILE --exec $DAEMON --test > /dev/null \
+		|| return 1
+	start-stop-daemon --start --quiet --pidfile $PIDFILE --exec $DAEMON -- \
+		$DAEMON_ARGS \
+		|| return 2
+}
+
+#
+# Function that stops the daemon/service
+#
+do_stop()
+{
+	# Return
+	#   0 if daemon has been stopped
+	#   1 if daemon was already stopped
+	#   2 if daemon could not be stopped
+	#   other if a failure occurred
+	start-stop-daemon --stop --quiet --retry=TERM/30/KILL/5 --pidfile $PIDFILE --name $NAME
+	RETVAL="$?"
+	[ "$RETVAL" = 2 ] && return 2
+	start-stop-daemon --stop --quiet --oknodo --retry=0/30/KILL/5 --exec $DAEMON
+	[ "$?" = 2 ] && return 2
+	# Many daemons don't delete their pidfiles when they exit.
+	rm -f $PIDFILE
+	return "$RETVAL"
+}
+
+case "$1" in
+  start)
+	echo -n "Starting $DESC $NAME: "
+	do_start
+	case "$?" in
+		0|1) echo done ;;
+		2) echo failed ;;
+	esac
+	;;
+  stop)
+	echo -n "Stopping $DESC $NAME: "
+	do_stop
+	case "$?" in
+		0|1) echo done ;;
+		2) echo failed ;;
+	esac
+	;;
+  restart|force-reload)
+	echo -n "Restarting $DESC $NAME: "
+	do_stop
+	case "$?" in
+	  0|1)
+		do_start
+		case "$?" in
+			0) echo done ;;
+			1) echo stop ignored ;; # Old process is still running
+			*) echo start failed ;; # Failed to start
+		esac
+		;;
+	  *)
+		# Failed to stop
+		echo stop failed
+		;;
+	esac
+	;;
+  *)
+	echo "Usage: $SCRIPTNAME {start|stop|restart|force-reload}" >&2
+	exit 3
+	;;
+esac
+
+:
