@@ -1,8 +1,8 @@
 Buildroot for Raspberry Pi
 ==========================
 
-This buildroot fork will produce a very light-weight and trimmed down
-toolchain, rootfs and kernel for the Raspberry Pi. It's intended for **advanced
+This buildroot fork will produce a kernel and rootfs with many useful features
+for the Raspberry Pi, yet with a very quick boot. It's intended for **advanced
 users** and specific embedded applications.
 
 Before You Begin
@@ -14,21 +14,10 @@ Before You Begin
 - You must be pretty comfortable with **cross-compilation** in order to use
   rpi-buildroot.
 
-Test Drive
-----------
+Toolchain
+---------
 
-You can test drive rpi-buildroot by following the instructions below:
-
-	wget http://dl.guillermoamaral.com/rpi/sdcard.img.xz
-	xz -d sdcard.img.xz
-	sudo dd if=sdcard.img of=/dev/sdx # replace *sdx* with your actual sdcard device node
-
-The default user is **root**, no password will be requested.
-
-### Toolchain
-
-I've added a toolchain, it has everything needed to cross-compile software for
-use with the test-drive image, download and usage instructions below:
+Download and usage instructions below:
 
 	wget http://dl.guillermoamaral.com/rpi/rpi-buildroot-toolchain.tar.xz
 	tar -xvJf rpi-buildroot-toolchain.tar.xz
@@ -43,18 +32,10 @@ use with the test-drive image, download and usage instructions below:
 	    -L"${BUILDROOT_TARGET_DIR}/lib" \
 	    main.c # example usage
 
-If you're interested in using the toolchain with CMake, you may want to
-download the toolchain cmake file used with Marshmallow Game Engine:
-
-	wget https://github.com/gamaral/marshmallow_h/blob/master/cmake/Toolchain-buildroot.cmake
-	# The **env** file needs to be **sourced** before executing the following command
-	cmake -DCMAKE_TOOLCHAIN_FILE=Toolchain-buildroot.cmake .
-	make
-
 Building
 --------
 
-	git clone --depth 1 git://github.com/gamaral/rpi-buildroot.git
+	git clone --depth 1 git://github.com/ADVANSEE/rpi-buildroot.git
 	cd rpi-buildroot
 	make raspberrypi_defconfig
 	make nconfig         # if you want to add packages or fiddle around with it
@@ -65,8 +46,8 @@ Deploying
 
 ### Script
 
-I've added a script that can automatically flash your sdcard, you simply need
-to point it to the correct device node, confirm and you're done!
+rpi-buildroot includes a script that can automatically flash your sdcard, you
+simply need to point it to the correct device node, confirm and you're done!
 
 **Notice** you will need to replace *sdx* in the following commands with the
 actual device node for your sdcard.
@@ -129,4 +110,10 @@ You will need to extract *output/images/rootfs.tar* onto the partition, as **roo
 	# run the following as root
 	tar -xvpsf output/images/rootfs.tar -C /media/rootfs # replace with your mount directory
 	umount /media/rootfs
+
+### Running
+
+Insert the flashed SD card into the Raspberry Pi's slot, then power it on.
+
+The default user is **root**, no password will be requested.
 
