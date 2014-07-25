@@ -171,7 +171,6 @@ define QT5BASE_CONFIGURE_CMDS
 		-device-option CROSS_COMPILE="$(CCACHE) $(TARGET_CROSS)" \
 		-device-option QMAKE_CFLAGS="$(TARGET_CFLAGS)" \
 		-device-option QMAKE_CXXFLAGS="$(TARGET_CXXFLAGS)" \
-		-device-option QMAKE_LIBS_OPENGL_ES2="-lGLESv2 -lEGL -lvchostif" \
 		-no-c++11 \
 		$(QT5BASE_CONFIGURE_OPTS) \
 	)
