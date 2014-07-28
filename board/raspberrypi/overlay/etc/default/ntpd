@@ -1,0 +1,8 @@
+# NTP servers to use for ntpdate
+NTPSERVERS="pool.ntp.org"
+
+# Additional options to pass to ntpdate
+NTPDATE_OPTS="-b -t 5"
+
+# Additional options to pass to ntpd
+NTPD_OPTS="-g"
