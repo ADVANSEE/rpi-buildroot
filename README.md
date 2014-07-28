@@ -108,5 +108,5 @@ You will need to extract *output/images/rootfs.tar* onto the partition, as **roo
 
 Insert the flashed SD card into the Raspberry Pi's slot, then power it on.
 
-The default user is **root**, no password will be requested.
+The default user and password are **root** and **rpi**.
 
