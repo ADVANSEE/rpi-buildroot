@@ -21,7 +21,7 @@ null::sysinit:/bin/mkdir -p /dev/shm
 null::sysinit:/bin/mount -a
 null::sysinit:/bin/hostname -F /etc/hostname
 # now run any rc scripts
-::sysinit:/etc/init.d/rcS
+ttyAMA0::sysinit:/etc/init.d/rcS
 
 # Put a getty on the serial port
 tty1::respawn:/sbin/getty -L tty1 115200 vt100
@@ -31,7 +31,7 @@ ttyAMA0::respawn:/sbin/getty -L ttyAMA0 115200 vt100
 ::ctrlaltdel:/sbin/reboot
 
 # Stuff to do before rebooting
-null::shutdown:/etc/init.d/rcK
+ttyAMA0::shutdown:/etc/init.d/rcK
 null::shutdown:/bin/umount -a -r
 null::shutdown:/sbin/swapoff -a
 
