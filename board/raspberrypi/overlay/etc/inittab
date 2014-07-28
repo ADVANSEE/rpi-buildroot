@@ -19,7 +19,6 @@ null::sysinit:/bin/mount -o remount,rw / # REMOUNT_ROOTFS_RW
 null::sysinit:/bin/mkdir -p /dev/pts
 null::sysinit:/bin/mkdir -p /dev/shm
 null::sysinit:/bin/mount -a
-null::sysinit:/bin/hostname -F /etc/hostname
 # now run any rc scripts
 ttyAMA0::sysinit:/etc/init.d/rcS
 

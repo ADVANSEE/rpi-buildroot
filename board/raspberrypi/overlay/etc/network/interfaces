@@ -4,3 +4,5 @@ iface lo inet loopback
 
 # Configure Ethernet
 iface eth0 inet dhcp
+	pre-up /etc/init.d/S02hostname start
+	pre-up /etc/init.d/S91smb restart

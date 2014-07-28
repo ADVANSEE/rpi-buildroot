@@ -1,0 +1,56 @@
+#!/bin/sh
+
+case "$1" in
+	start)
+		;;
+	stop)
+		exit 0
+		;;
+	*)
+		echo "Usage: $0 {start|stop}"
+		exit 1
+esac
+
+IFCONFIG=/sbin/ifconfig
+HOSTNAME=/bin/hostname
+HOSTNAME_CFG=/etc/hostname
+HOSTS_CFG=/etc/hosts
+
+echo -n "Setting hostname: "
+if [ ! -x "${HOSTNAME}" ]; then
+	echo "missing"
+	exit 1
+fi
+
+HOST="rpi$("${IFCONFIG}" eth0 2>/dev/null | \
+		sed -n 's/^.*HWaddr \([0-9A-F:]\{17\}\).*$/\1/;T;s/://g;s/[0-9A-F]\{6\}\(.*\)/\1/p' | \
+		tr [:upper:] [:lower:])"
+
+if [ -f "${HOSTNAME_CFG}" ]; then
+	SAVED_HOST="$(cat "${HOSTNAME_CFG}")"
+else
+	SAVED_HOST=""
+fi
+
+if [ "${SAVED_HOST}" != "${HOST}" ]; then
+	echo "${HOST}" > "${HOSTNAME_CFG}"
+fi
+
+if [ -f "${HOSTS_CFG}" ]; then
+	SAVED_HOST="$(sed -n 's/^[[:blank:]]*127\.0\.1\.1[[:blank:]]\+\([^[:blank:]]\+\).*$/\1/p;T;q' "${HOSTS_CFG}")"
+	SAVED_HOST6="$(sed -n 's/^[[:blank:]]*::1[[:blank:]]\+\([^[:blank:]]\+\).*$/\1/p;T;q' "${HOSTS_CFG}")"
+
+	if [ "${SAVED_HOST}" != "${HOST}" -o "${SAVED_HOST6}" != "${HOST}" ]; then
+		sed -i -e "1,/^[[:blank:]]*127\.0\.1\.1[[:blank:]]\+/s/\(^[[:blank:]]*127\.0\.1\.1[[:blank:]]\+\)[^[:blank:]]\+/\1${HOST}/" \
+		       -e "1,/^[[:blank:]]*::1[[:blank:]]\+/s/\(^[[:blank:]]*::1[[:blank:]]\+\)[^[:blank:]]\+/\1${HOST}/" "${HOSTS_CFG}"
+	fi
+else
+	echo -e "::1\t${HOST}\n127.0.1.1\t${HOST}" > "${HOSTS_CFG}"
+fi
+
+if "${HOSTNAME}" "${HOST}"; then
+	echo "'$("${HOSTNAME}")'"
+else
+	echo "failed"
+	exit 1
+fi
