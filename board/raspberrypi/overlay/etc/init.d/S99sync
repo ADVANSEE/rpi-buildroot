@@ -1,0 +1,18 @@
+#!/bin/sh
+
+case "$1" in
+	start|restart|reload)
+		echo -n "Syncing: "
+		if sync; then
+			echo "done"
+		else
+			echo "failed"
+			exit 1
+		fi
+		;;
+	stop)
+		;;
+	*)
+		echo "Usage: $0 {start|stop|restart|reload}"
+		exit 1
+esac
