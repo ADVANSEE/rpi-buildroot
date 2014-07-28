@@ -1,0 +1,16 @@
+#!/bin/sh
+
+case "$reason" in
+    MEDIUM|ARPCHECK|ARPSEND|NBI)
+        ;;
+
+    PREINIT|BOUND|RENEW|REBIND|REBOOT|STOP|RELEASE)
+        # Stopping avahi-autoipd is left for the enter hook
+        ;;
+
+    EXPIRE|FAIL|TIMEOUT)
+        /bin/rm -f /var/lib/dhcp/dhclient.leases 2> /dev/null
+        /bin/rm -f /var/lib/dhcp/dhclient6.leases 2> /dev/null
+        /usr/sbin/avahi-autoipd -wD $interface 2> /dev/null
+        ;;
+esac
