@@ -128,6 +128,17 @@ SAMBA_TXTTARGETS_ = \
 SAMBA_TXTTARGETS_$(BR2_PACKAGE_SAMBA_FINDSMB) += usr/bin/findsmb
 SAMBA_TXTTARGETS_$(BR2_PACKAGE_SAMBA_SMBTAR) += usr/bin/smbtar
 
+define SAMBA_INSTALL_LIBNSS
+	# install libnss_*
+	$(INSTALL) -m 0755 -D $(@D)/nsswitch/libnss_win*.so $(TARGET_DIR)/lib/
+	ln -snf libnss_winbind.so $(TARGET_DIR)/lib/libnss_winbind.so.2
+	ln -snf libnss_wins.so $(TARGET_DIR)/lib/libnss_wins.so.2
+endef
+
+ifeq ($(BR2_PACKAGE_SAMBA_WINBINDD),y)
+SAMBA_POST_INSTALL_TARGET_HOOKS += SAMBA_INSTALL_LIBNSS
+endif
+
 define SAMBA_REMOVE_UNNEEDED_BINARIES
 	rm -f $(addprefix $(TARGET_DIR)/, $(SAMBA_BINTARGETS_))
 	rm -f $(addprefix $(TARGET_DIR)/, $(SAMBA_TXTTARGETS_))
