@@ -1,0 +1,7 @@
+# auto-mount disks and partitions
+ACTION=="add|change", ENV{DEVTYPE}=="disk", ENV{ID_PATH}=="?*", RUN+="storage-automount mount %k $env{ID_PATH}"
+ACTION=="add|change", ENV{DEVTYPE}=="partition", ENV{ID_PATH}=="?*", RUN+="storage-automount mount %k $env{ID_PATH}-part%n"
+
+# auto-unmount disks and partitions
+ACTION=="remove", ENV{DEVTYPE}=="disk", ENV{ID_PATH}=="?*", RUN+="storage-automount umount $env{ID_PATH}"
+ACTION=="remove", ENV{DEVTYPE}=="partition", ENV{ID_PATH}=="?*", RUN+="storage-automount umount $env{ID_PATH}-part%n"

@@ -1,0 +1,53 @@
+#!/bin/sh
+
+COMMAND=$1
+
+case "$COMMAND" in
+	mount)
+		[ $# -eq 3 ] || exit 1
+		DEVNODE=/dev/$2
+		MOUNTPOINT=$3
+		;;
+	umount)
+		[ $# -eq 2 ] || exit 1
+		MOUNTPOINT=$2
+		;;
+	*)
+		echo "Usage: $0 {mount <devnode>|umount} <mountpoint>"
+		exit 1
+		;;
+esac
+
+MKDIR=/bin/mkdir
+[ -x $MKDIR ] || exit 1
+
+RMDIR=/bin/rmdir
+[ -x $RMDIR ] || exit 1
+
+MOUNT=/bin/mount
+[ -x $MOUNT ] || exit 1
+
+UMOUNT=/bin/umount
+[ -x $UMOUNT ] || exit 1
+
+case "$MOUNTPOINT" in
+	platform-bcm2708_usb-usb-0:1*)
+		MOUNTPOINT=usb${MOUNTPOINT#platform-bcm2708_usb-usb-0:1}
+		;;
+esac
+MOUNTPOINT=/media/$MOUNTPOINT
+
+case "$COMMAND" in
+	mount)
+		$MKDIR -p "$MOUNTPOINT" || exit 1
+		if ! ($MOUNT -o umask=000 "$DEVNODE" "$MOUNTPOINT" ||
+		      $MOUNT "$DEVNODE" "$MOUNTPOINT"); then
+			$RMDIR "$MOUNTPOINT"
+			exit 1
+		fi
+		;;
+	umount)
+		$UMOUNT "$MOUNTPOINT" || exit 1
+		$RMDIR "$MOUNTPOINT" || exit 1
+		;;
+esac
