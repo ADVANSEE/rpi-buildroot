@@ -1,0 +1,31 @@
+#!/bin/sh
+
+COMMAND=$1
+
+case "$COMMAND" in
+	up|down)
+		[ $# -eq 2 ] || exit 1
+		IFACE=$2
+		;;
+	*)
+		echo "Usage: $0 {up|down} <iface>"
+		exit 1
+		;;
+esac
+
+INTERFACES=/etc/network/interfaces
+GREP=/bin/grep
+IFUPDOWN=/sbin/if$COMMAND
+PID_FILE=/var/run/ifupdown.pid
+START_STOP_DAEMON=/sbin/start-stop-daemon
+
+[ -r $INTERFACES -a \
+  -x $GREP -a \
+  -x $IFUPDOWN -a \
+  -x $START_STOP_DAEMON ] || exit 1
+
+# Bring devices up and down only if they're marked 'allow-hotplug'.
+$GREP "^allow-hotplug\b.*\<$IFACE\>" $INTERFACES &> /dev/null || exit 0
+
+# Use start-stop-daemon so that we don't wait on DHCP.
+$START_STOP_DAEMON -S -b -p $PID_FILE -a $IFUPDOWN -- $IFACE

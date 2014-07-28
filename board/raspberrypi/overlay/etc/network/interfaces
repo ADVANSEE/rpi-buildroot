@@ -6,3 +6,8 @@ iface lo inet loopback
 iface eth0 inet dhcp
 	pre-up /etc/init.d/S02hostname start
 	pre-up /etc/init.d/S91smb restart
+
+# Configure Wi-Fi
+allow-hotplug wlan0
+iface wlan0 inet dhcp
+	wpa-conf /etc/wpa_supplicant.conf

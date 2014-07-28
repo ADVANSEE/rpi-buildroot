@@ -1,0 +1,10 @@
+SUBSYSTEM=="net", GOTO="net_start"
+GOTO="net_end"
+
+LABEL="net_start"
+
+# bring network devices up and down
+ACTION=="add", RUN+="ifupdown up $env{INTERFACE}"
+ACTION=="remove", RUN+="ifupdown down $env{INTERFACE}"
+
+LABEL="net_end"
