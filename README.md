@@ -17,20 +17,13 @@ Before You Begin
 Toolchain
 ---------
 
-Download and usage instructions below:
+It is recommended to use rpi-buildroot with the default toolchain for Raspberry
+Pi:
 
-	wget http://dl.guillermoamaral.com/rpi/rpi-buildroot-toolchain.tar.xz
-	tar -xvJf rpi-buildroot-toolchain.tar.xz
-	source rpi-buildroot-toolchain/env
-	$CC -I"${BUILDROOT_STAGING_DIR}/usr/include" \
-	    -I"${BUILDROOT_STAGING_DIR}/opt/vc/include" \
-	    -L"${BUILDROOT_STAGING_DIR}/opt/vc/lib" \
-	    -L"${BUILDROOT_STAGING_DIR}/usr/lib" \
-	    -L"${BUILDROOT_STAGING_DIR}/lib" \
-	    -L"${BUILDROOT_TARGET_DIR}/opt/vc/lib" \
-	    -L"${BUILDROOT_TARGET_DIR}/usr/lib" \
-	    -L"${BUILDROOT_TARGET_DIR}/lib" \
-	    main.c # example usage
+	# The '-x64' suffix must be removed for 32-bit build machines.
+	svn export https://github.com/raspberrypi/tools/trunk/arm-bcm2708/gcc-linaro-arm-linux-gnueabihf-raspbian-x64
+	export PATH="$(readlink -qsne "gcc-linaro-arm-linux-gnueabihf-raspbian-x64/bin/"):${PATH}"
+	arm-linux-gnueabihf-gcc main.c # example usage
 
 Building
 --------
