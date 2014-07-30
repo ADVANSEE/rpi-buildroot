@@ -1,0 +1,97 @@
+#!/bin/bash
+
+#
+# Script to alter image file
+#
+# Copyright 2014 ADVANSEE
+# Benoît Thébaudeau <benoit.thebaudeau@advansee.com>
+#
+
+set -e
+shopt -s extglob
+
+usage()
+{
+	cat <<-EOF
+	Usage: ${script} <image-file> <action-sub-script>
+
+	If invalid command line arguments are given, then this help is output.
+
+	Behavior:
+	This script alters a previously generated image file by running
+	'<action-sub-script>' on the partitions present in '<image-file>'.
+
+	'<action-sub-script>' is a sub-script run within the context of this
+	script. It can perform any operation on the image partitions using the
+	"\${parts[]}" array variable, which contains the mount point path of
+	each partition. The contents of these partitions are exactly like on the
+	target device, so \`sudo\` is required for most changes.
+
+	Notes:
+	This script uses \`sudo\`, so the user may be asked for a password.
+	EOF
+}
+
+cleanup()
+{
+	local ret="$?"
+	trap - ERR EXIT
+	if [ ${#mounts[@]} -ne 0 ]; then
+		while [ "$(lsof "${mounts[@]}" 2> /dev/null)" != "" ]; do
+			:
+		done
+		sudo umount "${mounts[@]}"
+	fi
+	[ ${#parts[@]} -ne 0 ] && rmdir "${parts[@]}"
+	[ ${#loops[@]} -ne 0 ] && sudo losetup -d "${loops[@]}"
+	exit "${ret}"
+}
+
+script_path="$(readlink -qsne "$0")"
+script="${script_path##*/}"
+
+if [ $# -ne 2 ]; then
+	usage
+	exit 1
+fi
+
+image="$1"
+action_script="$2"
+
+loops=()
+parts=()
+mounts=()
+trap cleanup ERR EXIT
+
+echo "Reading '${image}' partition table..."
+part_table_loop="$(sudo losetup -f)"
+sudo losetup "${part_table_loop}" "${image}"
+loops=("${part_table_loop}")
+part_list="$(sudo parted -m "${part_table_loop}" unit B print ||
+		(ret="$?"; echo "parted failed" 1>&2; exit "${ret}"))"
+sudo losetup -d "${part_table_loop}"
+loops=()
+
+echo "Mounting '${image}' partitions..."
+while part_desc="$(echo "${part_list}" | grep "^$((${#parts[@]} + 1)):")"; do
+	offset="$(echo "${part_desc}" | cut -d ':' -f 2 | tr -d 'B')"
+	size="$(echo "${part_desc}" | cut -d ':' -f 4 | tr -d 'B')"
+
+	loop="$(sudo losetup -f)"
+	sudo losetup -o "${offset}" --sizelimit "${size}" "${loop}" "${image}"
+	loops+=("${loop}")
+	part="$(mktemp -d)"
+	parts+=("${part}")
+	sudo mount "${loop}" "${part}"
+	mounts+=("${part}")
+done
+
+if [ ${#parts[@]} -eq 0 ]; then
+	echo "No partition found in '${image}'"
+	exit 2
+fi
+
+echo "Executing '${action_script}'..."
+. "${action_script}"
+
+echo "'${image}' alteration completed"

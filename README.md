@@ -34,6 +34,25 @@ Building
 	make nconfig         # if you want to add packages or fiddle around with it
 	make                 # build (NOTICE: Don't use the **-j** switch, it's set to auto-detect)
 
+Customizing a Generated Image
+-----------------------------
+
+rpi-buildroot includes a script that can alter a previously generated SD card
+image. This can be useful e.g. to add a binary file built outside BuildRoot, or
+to tweak some configuration files without rebuilding the whole image if the
+build files have not been kept. E.g.:
+
+	# This script uses `sudo`, so the user may be asked for a password.
+	board/raspberrypi/alter-img /path/to/sdcard.img /path/to/sub-script
+
+A sample sub-script that would create a */test* file on the *rootfs* partition
+could contain:
+
+	sudo touch "${parts[1]}/test"
+
+In order to get the help message giving all the details, just run *alter-img*
+without any argument.
+
 Deploying
 ---------
 
