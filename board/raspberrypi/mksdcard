@@ -63,8 +63,8 @@ fi
 
 # root privilege check
 
-EUID=`id -u`
-if [ ${EUID} -ne 0 ]; then
+USER_ID=`id -u`
+if [ ${USER_ID} -ne 0 ]; then
 	echo "${0} requires root privileges in order to work."
 	exit 0
 fi
