@@ -31,7 +31,7 @@ PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 OUTPUT_PREFIX=""
 
 if [ -z "${SIZE}" ]; then
-    SIZE="256M"
+    SIZE="512M"
 fi
 
 echo "Creating ${SIZE} size image..."
@@ -144,7 +144,7 @@ ${SYNC}
 ${LOSETUP} -d ${LOOP}
 
 # loop image
-${LOSETUP} -o 0x2100000 --sizelimit 0xDF00000 ${LOOP} ${IMAGE} || exit 1
+${LOSETUP} -o 0x2100000 --sizelimit 0x1DF00000 ${LOOP} ${IMAGE} || exit 1
 
 # format rootfs partition
 
