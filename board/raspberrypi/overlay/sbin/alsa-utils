@@ -1,0 +1,147 @@
+#!/bin/sh
+#
+# alsa-utils initscript
+#
+### BEGIN INIT INFO
+# Provides:          alsa-utils
+# Short-Description: Restore ALSA driver settings
+# Description:       This script restores mixer levels on bootup.
+### END INIT INFO
+
+# Don't use set -e; check exit status instead
+
+# Exit silently if package is no longer installed
+[ -x /usr/sbin/alsactl ] || exit 0
+
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+MYNAME=$0
+export PULSE_INTERNAL=0
+
+log_action_begin_msg()
+{
+	echo -n "$@..."
+}
+
+log_action_cont_msg()
+{
+	echo -n "$@..."
+}
+
+log_action_end_msg()
+{
+	log_action_end_msg_pre "$@"
+	if [ -z "${2:-}" ]; then
+		end="."
+	else
+		end=" ($2)."
+	fi
+
+	if [ $1 -eq 0 ]; then
+		echo "done${end}"
+	else
+		echo "failed${end}"
+	fi
+	log_action_end_msg_post "$@"
+}
+
+log_action_end_msg_pre() { :; }
+log_action_end_msg_post() { :; }
+
+# $1 EXITSTATUS
+# [$2 MESSAGE]
+log_action_end_msg_and_exit()
+{
+	log_action_end_msg "$1" ${2:+"$2"}
+	exit $1
+}
+
+# Wait for filesystems to show up
+while [ ! -d /usr/bin -o ! -d /var/lib/alsa ]; do
+	sleep 0.2
+done
+
+bugout() { echo "${MYNAME}: Programming error" >&2 ; exit 123 ; }
+
+# $1 <card ID> | "all"
+restore_levels()
+{
+	[ -f /var/lib/alsa/asound.state ] || return 1
+	CARD="$1"
+	[ "$1" = all ] && CARD=""
+	# Assume that if alsactl prints a message on stderr
+	# then it failed somehow.  This works around the fact
+	# that alsactl doesn't return nonzero status when it
+	# can't restore settings for the card
+	if MSG="$(alsactl -I restore $CARD 2>&1 >/dev/null)" && [ ! "$MSG" ] ; then
+		return 0
+	else
+		# Retry with the "force" option.  This restores more levels
+		# but it results in much longer error messages.
+		alsactl -I -F restore $CARD >/dev/null 2>&1
+		[ -z "$CARD" ] && log_action_cont_msg "warning: 'alsactl restore' failed with error message '$MSG'"
+		return 1
+	fi
+}
+
+# $1 <card ID> | "all"
+card_OK()
+{
+	[ "$1" ] || bugout
+	if [ "$1" = all ] ; then
+		[ -d /proc/asound ]
+		return $?
+	else
+		[ -d "/proc/asound/card$1" ] || [ -d "/proc/asound/$1" ]
+		return $?
+	fi
+}
+
+# If a card identifier is provided in $2 then regard it as an error
+# if that card is not present; otherwise don't regard it as an error.
+
+case "$1" in
+  start)
+	EXITSTATUS=0
+	TARGET_CARD="$2"
+	case "$TARGET_CARD" in
+	  ""|all) TARGET_CARD=all ; log_action_begin_msg "Setting up ALSA" ;;
+	esac
+	if ! card_OK "$TARGET_CARD"; then
+		[ "$TARGET_CARD" = "all" ] && log_action_end_msg "$( [ ! "$2" ] ; echo $? ; )" "none loaded"
+		exit $?
+	fi
+	restore_levels "$TARGET_CARD" >/dev/null 2>&1 || :
+	[ "$TARGET_CARD" = "all" ] && log_action_end_msg_and_exit "$EXITSTATUS"
+	exit $EXITSTATUS
+	;;
+  stop)
+	EXITSTATUS=0
+	TARGET_CARD="$2"
+	case "$TARGET_CARD" in
+	  ""|all) TARGET_CARD=all ; log_action_begin_msg "Shutting down ALSA" ;;
+	  *) log_action_begin_msg "Shutting down ALSA card ${TARGET_CARD}" ;;
+	esac
+	card_OK "$TARGET_CARD" || log_action_end_msg_and_exit "$( [ ! "$2" ] ; echo $? ; )" "none loaded"
+	log_action_end_msg_and_exit "$EXITSTATUS"
+	;;
+  restart|force-reload)
+	EXITSTATUS=0
+	$0 stop || EXITSTATUS=1
+	$0 start || EXITSTATUS=1
+	exit $EXITSTATUS
+	;;
+  reset)
+	TARGET_CARD="$2"
+	case "$TARGET_CARD" in
+	  ""|all) TARGET_CARD=all ; log_action_begin_msg "Resetting ALSA" ;;
+	  *) log_action_begin_msg "Resetting ALSA card ${TARGET_CARD}" ;;
+	esac
+	card_OK "$TARGET_CARD" || log_action_end_msg_and_exit "$( [ ! "$2" ] ; echo $? ; )" "none loaded"
+	restore_levels "$TARGET_CARD"
+	log_action_end_msg_and_exit "$?"
+	;;
+  *)
+	echo "Usage: $MYNAME {start [CARD]|stop [CARD]|restart [CARD]|reset [CARD]}" >&2
+	exit 3
+	;;
+esac

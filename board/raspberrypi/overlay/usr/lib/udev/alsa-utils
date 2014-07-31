@@ -1,0 +1,9 @@
+#!/bin/sh -e
+#
+# udev script for alsa-utils
+
+(
+	DEV_BASENAME="${DEVNAME##*/}"
+	N="${DEV_BASENAME#controlC}"
+	exec /sbin/alsa-utils start $N
+) &
