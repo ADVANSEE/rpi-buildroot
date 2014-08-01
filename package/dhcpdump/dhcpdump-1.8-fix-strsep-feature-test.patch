@@ -1,0 +1,12 @@
+diff -Nrdup dhcpdump-1.8.orig/dhcpdump.c dhcpdump-1.8/dhcpdump.c
+--- dhcpdump-1.8.orig/dhcpdump.c	2008-06-24 05:26:52.000000000 +0200
++++ dhcpdump-1.8/dhcpdump.c	2011-05-31 19:22:15.987388498 +0200
+@@ -26,7 +26,7 @@
+ #include <regex.h>
+ #include "dhcp_options.h"
+ 
+-#ifndef HAVE_STRSEP
++#ifndef _BSD_SOURCE
+ #include "strsep.c"
+ #endif
+ 
