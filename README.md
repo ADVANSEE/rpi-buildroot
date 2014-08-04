@@ -2,8 +2,8 @@ Buildroot for Raspberry Pi
 ==========================
 
 This buildroot fork will produce a kernel and rootfs with many useful features
-for the Raspberry Pi, yet with a very quick boot. It's intended for **advanced
-users** and specific embedded applications.
+for the Raspberry Pi, yet with a very quick boot (about 5 s). It's intended for
+**advanced users** and specific embedded applications.
 
 Before You Begin
 ----------------
