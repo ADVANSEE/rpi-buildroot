@@ -1,0 +1,8 @@
+# See package/makedevs/README for details
+#
+# This device table is used to assign proper ownership and permissions
+# on various files.
+#
+# <name>				<type>	<mode>	<uid>	<gid>	<major>	<minor>	<start>	<inc>	<count>
+/var/lib/lighttpd			d	755	33	33	-	-	-	-	-
+/var/lib/lighttpd/sockets		d	755	33	33	-	-	-	-	-
